@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>影片播放測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        #videoContainer {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        video {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="videoContainer">
+        <video id="videoPlayer" controls>
+            <source src="videos/dafo_idol_1.mp4" type="video/mp4">
+            您的瀏覽器不支援 HTML5 影片標籤。
+        </video>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 影片播放部分
+            var videoPlayer = document.getElementById('videoPlayer');
+            var videoIndex = 0;
+            var videos = ['videos/dafo_idol_1.mp4', 'videos/DAFO_05_偶像.mp4', 'videos/video3.mp4'];
+
+            function playNextVideo() {
+                videoIndex = (videoIndex + 1) % videos.length;
+                videoPlayer.src = videos[videoIndex];
+                videoPlayer.play();
+            }
+
+            function playPreviousVideo() {
+                videoIndex = (videoIndex - 1 + videos.length) % videos.length;
+                videoPlayer.src = videos[videoIndex];
+                videoPlayer.play();
+            }
+
+            // 語音識別部分
+            var recognition;
+            try {
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            } catch (e) {
+                console.error('SpeechRecognition not supported in this browser.', e);
+                return;
+            }
+            recognition.lang = 'zh-TW';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onresult = function(event) {
+                var transcript = event.results[0][0].transcript.trim();
+                console.log('識別結果:', transcript);
+                if (/下一步/.test(transcript)) { // 匹配任何包含“下一步”的語音輸入
+                    playNextVideo();
+                } else if (/上一步/.test(transcript)) { // 匹配任何包含“上一步”的語音輸入
+                    playPreviousVideo();
+                }
+            };
+
+            recognition.onerror = function(event) {
+                console.error('語音識別錯誤:', event.error);
+            };
+
+            recognition.onend = function() {
+                // 等待短时间后重新启动识别，以防止频繁请求权限
+                setTimeout(function() {
+                    recognition.start();
+                }, 1000);
+            };
+
+            function startRecognition() {
+                recognition.start();
+            }
+
+            // 直接启动语音识别
+            startRecognition();
+        });
+    </script>
+</body>
+</html>
